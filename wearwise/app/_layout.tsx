@@ -1,6 +1,6 @@
 import { ConvexProvider, ConvexReactClient } from "convex/react";
 import { Stack } from "expo-router";
-
+import { PaperProvider } from "react-native-paper";
 const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL!, {
   unsavedChangesWarning: false,
 });
@@ -8,9 +8,11 @@ const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL!, {
 export default function RootLayout() {
   return (
     <ConvexProvider client={convex}>
-      <Stack>
-        <Stack.Screen name="index" />
-      </Stack>
+      <PaperProvider>
+        <Stack>
+          <Stack.Screen name="index" />
+        </Stack>
+      </PaperProvider>
     </ConvexProvider>
   );
 }
