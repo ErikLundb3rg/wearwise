@@ -8,20 +8,33 @@ import {
 } from "expo-camera";
 import { useRef, useState } from "react";
 import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
-import { Button, Text, TextInput } from "react-native-paper";
+import { ActivityIndicator, Button, Text, TextInput } from "react-native-paper";
 import { Link } from "expo-router";
 import { useFonts } from "expo-font";
 import { ScrollView } from "react-native-gesture-handler";
 
+const outfit = ["Cap", "Rain boots", "Rain jacket Hooke"];
+
 export default function Index() {
-  const listImages = useQuery(api.listMessages.list);
   const items = useQuery(api.items.getItems);
+  const [pictureLoading, setPictureLoading] = useState(false);
+  const [itemsLoaded, setItemsLoaded] = useState(false);
+
   // const [loaded] = useFonts({
   //   Inter: require("@tamagui/font-inter/otf/Inter-Medium.otf"),
   //   InterBold: require("@tamagui/font-inter/otf/Inter-Bold.otf"),
   // });
 
-  console.log(listImages);
+  // console.log(listImages);
+  const generateOutfit = async () => {
+    setPictureLoading(true);
+    // sleep for 1 second to show the loading spinner
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+    setPictureLoading(false);
+    setItemsLoaded(true);
+  };
+
+  // console.log("items", items);
 
   return (
     <View style={styles.container}>
@@ -29,27 +42,32 @@ export default function Index() {
         <Text variant="displayLarge" style={{ color: "#172727" }}>
           WearWise
         </Text>
-        {/* {listImages &&
-          listImages.map((image) => (
-            <Image
-              width={300}
-              height={300}
-              source={{ uri: image.url }}
-              style={styles.image}
-            />
-          ))} */}
-        {/* {items &&
-          items.map((item) => (
-            <Image
-              width={300}
-              height={300}
-              source={{ uri: item.url }}
-              style={styles.image}
-            />
-          ))} */}
+        {!itemsLoaded && !pictureLoading && (
+          <Button
+            style={{ marginVertical: 10 }}
+            mode="contained"
+            onPress={generateOutfit}
+          >
+            Generate my daily outfit
+          </Button>
+        )}
+        {pictureLoading && (
+          <ActivityIndicator style={{ margin: 20 }} size="large" />
+        )}
+        {items &&
+          itemsLoaded &&
+          items
+            .filter(({ title }) => outfit.includes(title))
+            .map((item) => (
+              <Image
+                width={100}
+                source={{ uri: item.url }}
+                style={styles.image}
+              />
+            ))}
         {/* <Button mode="contained"> */}
-        <Link href="/wardrobe">My wardrobe</Link>
-        <Link href="/select-image">Upload your clothes</Link>
+        {/* <Link href="/wardrobe">My wardrobe</Link>
+        <Link href="/select-image">Upload your clothes</Link> */}
         {/* </Button> */}
       </ScrollView>
     </View>
@@ -60,6 +78,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "center",
+    padding: 30,
   },
   message: {
     textAlign: "center",

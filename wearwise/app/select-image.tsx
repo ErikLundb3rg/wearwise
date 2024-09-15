@@ -2,9 +2,23 @@ import { useState } from "react";
 import { Image, View, StyleSheet, ScrollView } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useCameraPermissions } from "expo-camera";
-import { Button, Text, TextInput } from "react-native-paper";
+import {
+  Button,
+  Text,
+  TextInput,
+  ActivityIndicator,
+  MD2Colors,
+  Snackbar,
+} from "react-native-paper";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
+
+const staticPicture = {
+  title: "favourite shirt",
+  color: "black",
+  fabric: "cotton",
+  type: "t-shirt",
+};
 
 export default function ImagePickerExample() {
   const [image, setImage] = useState<string | null>(null);
@@ -16,6 +30,27 @@ export default function ImagePickerExample() {
   const [color, setColor] = useState("");
   const [fabric, setFabric] = useState("");
   const [type, setType] = useState("");
+  const [pictureLoading, setPictureLoading] = useState(false);
+  const [visible, setVisible] = useState(false);
+
+  const onToggleSnackBar = () => {
+    setVisible(true);
+    setTimeout(() => {
+      setVisible(false);
+    }, 3500);
+  };
+
+  const handlePicture = async (uri: string) => {
+    setPictureLoading(true);
+    // sleep for 1 second to show the loading spinner
+    await new Promise((resolve) => setTimeout(resolve, 1800));
+    setPictureLoading(false);
+    setImage(uri);
+    setTitle(staticPicture.title);
+    setColor(staticPicture.color);
+    setFabric(staticPicture.fabric);
+    setType(staticPicture.type);
+  };
 
   async function storeImage(uri: string) {
     // 1. Get upload url from Convex.
@@ -62,22 +97,6 @@ export default function ImagePickerExample() {
     }
   }
 
-  const uploadImage = async (image: File) => {
-    const postUrl = await generateUploadUrl();
-
-    console.log("image", image);
-    const result = await fetch(postUrl, {
-      method: "POST",
-      headers: { "Content-Type": "multipart/form-data" },
-      body: image,
-    });
-    console.log("upload", result);
-    const body = await result.json();
-    const { storageId } = body;
-    const sent = await sendImage({ storageId, author: "author-name" });
-    return sent;
-  };
-
   const pickImage = async () => {
     // No permissions request is necessary for launching the image library
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -90,7 +109,7 @@ export default function ImagePickerExample() {
 
     if (!result.canceled) {
       const picture = result.assets[0];
-      setImage(picture.uri);
+      await handlePicture(picture.uri);
     }
   };
   requestPermission();
@@ -101,9 +120,12 @@ export default function ImagePickerExample() {
 
     if (!result.canceled) {
       const picture = result.assets[0];
-      setImage(picture.uri);
+      await handlePicture(picture.uri);
     }
   };
+
+  if (pictureLoading) {
+  }
 
   const submitPicture = async () => {
     if (!image) {
@@ -111,6 +133,7 @@ export default function ImagePickerExample() {
     }
     const storageId = await storeImage(image);
     await uploadItem({ color, fabric, storageId, title, type });
+    onToggleSnackBar();
     console.log("Submitted picture");
   };
   return (
@@ -137,6 +160,7 @@ export default function ImagePickerExample() {
       <View style={{ flex: 1, alignItems: "center" }}>
         {image && <Image source={{ uri: image }} style={styles.image} />}
       </View>
+      {pictureLoading && <ActivityIndicator />}
       {image && (
         <>
           <TextInput
@@ -166,6 +190,9 @@ export default function ImagePickerExample() {
           <Button mode="contained" onPress={submitPicture}>
             Submit
           </Button>
+          <Snackbar visible={visible} onDismiss={() => setVisible(false)}>
+            Successfully uploaded item!
+          </Snackbar>
         </>
       )}
     </ScrollView>
