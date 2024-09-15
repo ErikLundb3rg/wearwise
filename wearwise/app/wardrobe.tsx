@@ -8,12 +8,12 @@ import {
 } from "expo-camera";
 import { useRef, useState } from "react";
 import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
-import { Button, Text, TextInput } from "react-native-paper";
+import { Text, TextInput, Avatar, Button, Card } from "react-native-paper";
 import { Link } from "expo-router";
 import { useFonts } from "expo-font";
 import { ScrollView } from "react-native-gesture-handler";
 
-export default function Index() {
+export default function Wardrobe() {
   const listImages = useQuery(api.listMessages.list);
   const items = useQuery(api.items.getItems);
   // const [loaded] = useFonts({
@@ -25,32 +25,35 @@ export default function Index() {
 
   return (
     <View style={styles.container}>
-      <ScrollView>
-        <Text variant="displayLarge" style={{ color: "#172727" }}>
-          WearWise
+      <ScrollView style={{ padding: 10 }}>
+        <Text variant="displayMedium" style={{ color: "#172727" }}>
+          Wardrobe
         </Text>
-        {/* {listImages &&
-          listImages.map((image) => (
-            <Image
-              width={300}
-              height={300}
-              source={{ uri: image.url }}
-              style={styles.image}
-            />
-          ))} */}
-        {/* {items &&
+        {items &&
           items.map((item) => (
-            <Image
-              width={300}
-              height={300}
-              source={{ uri: item.url }}
-              style={styles.image}
-            />
-          ))} */}
-        {/* <Button mode="contained"> */}
-        <Link href="/wardrobe">My wardrobe</Link>
-        <Link href="/select-image">Upload your clothes</Link>
-        {/* </Button> */}
+            <Card style={{ margin: 4 }}>
+              <Image
+                width={100}
+                height={100}
+                source={{ uri: item.url }}
+                style={styles.image}
+              />
+              <Card.Content>
+                <Text variant="titleLarge">{item.title}</Text>
+                <Text variant="bodyMedium">{item.color}</Text>
+                <Text variant="bodyMedium">{item.fabric}</Text>
+                <Text variant="bodyMedium">{item.type}</Text>
+              </Card.Content>
+            </Card>
+            // <Card>
+            //   <Card.Title title="Card Title" subtitle="Card Subtitle" />
+            //   <Card.Content>
+            //     <Text variant="titleLarge">Card title</Text>
+            //     <Text variant="bodyMedium">Card content</Text>
+            //   </Card.Content>
+            //   <Card.Cover source={{ uri: "https://picsum.photos/700" }} />
+            // </Card>
+          ))}
       </ScrollView>
     </View>
   );
