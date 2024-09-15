@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Image, View, StyleSheet } from "react-native";
+import { Image, View, StyleSheet, ScrollView } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useCameraPermissions } from "expo-camera";
-import { Button, Text } from "react-native-paper";
+import { Button, Text, TextInput } from "react-native-paper";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 
@@ -11,8 +11,13 @@ export default function ImagePickerExample() {
   const [permission, requestPermission] = useCameraPermissions();
   const generateUploadUrl = useMutation(api.messages.generateUploadUrl);
   const sendImage = useMutation(api.messages.sendImage);
+  const uploadItem = useMutation(api.items.uploadItem);
+  const [title, setTitle] = useState("");
+  const [color, setColor] = useState("");
+  const [fabric, setFabric] = useState("");
+  const [type, setType] = useState("");
 
-  async function uploadAndSaveImage(uri: string) {
+  async function storeImage(uri: string) {
     // 1. Get upload url from Convex.
     //    This is the first mutation from the Convex docs for uploading.
     const postUrl = await generateUploadUrl();
@@ -49,7 +54,7 @@ export default function ImagePickerExample() {
       const { storageId } = await result.json();
 
       // 7. Store custom metadata associated with this recording in Convex
-      const uploadResult = await sendImage({ storageId, author: "author" });
+      return storageId;
     } catch (err) {
       // Note: You may actually want to inform the user of this.
       console.error("Failed to upload.", err);
@@ -86,19 +91,30 @@ export default function ImagePickerExample() {
     if (!result.canceled) {
       const picture = result.assets[0];
       setImage(picture.uri);
-      console.log("picture", picture);
-      await uploadAndSaveImage(picture.uri);
     }
   };
   requestPermission();
 
   const takePicture = async () => {
     // No permissions request is necessary for launching the image library
-    console.log("running");
     let result = await ImagePicker.launchCameraAsync();
+
+    if (!result.canceled) {
+      const picture = result.assets[0];
+      setImage(picture.uri);
+    }
+  };
+
+  const submitPicture = async () => {
+    if (!image) {
+      return;
+    }
+    const storageId = await storeImage(image);
+    await uploadItem({ color, fabric, storageId, title, type });
+    console.log("Submitted picture");
   };
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <Text variant="displayLarge" style={{ color: "#172727" }}>
         Upload clothing
       </Text>
@@ -106,7 +122,7 @@ export default function ImagePickerExample() {
         style={{ marginVertical: 10 }}
         icon="camera"
         mode="contained"
-        onPress={pickImage}
+        onPress={takePicture}
       >
         Take a picture
       </Button>
@@ -118,8 +134,41 @@ export default function ImagePickerExample() {
       >
         Choose from library
       </Button>
-      {image && <Image source={{ uri: image }} style={styles.image} />}
-    </View>
+      <View style={{ flex: 1, alignItems: "center" }}>
+        {image && <Image source={{ uri: image }} style={styles.image} />}
+      </View>
+      {image && (
+        <>
+          <TextInput
+            style={styles.button}
+            label="Title"
+            value={title}
+            onChangeText={setTitle}
+          />
+          <TextInput
+            style={styles.button}
+            label="Color"
+            value={color}
+            onChangeText={setColor}
+          />
+          <TextInput
+            style={styles.button}
+            label="Fabric"
+            value={fabric}
+            onChangeText={setFabric}
+          />
+          <TextInput
+            style={styles.button}
+            label="Type"
+            value={type}
+            onChangeText={setType}
+          />
+          <Button mode="contained" onPress={submitPicture}>
+            Submit
+          </Button>
+        </>
+      )}
+    </ScrollView>
   );
 }
 
@@ -132,6 +181,9 @@ const styles = StyleSheet.create({
   image: {
     width: 200,
     height: 200,
+    margin: 10,
+  },
+  button: {
     margin: 10,
   },
 });

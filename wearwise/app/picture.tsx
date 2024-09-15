@@ -8,6 +8,7 @@ import {
 } from "expo-camera";
 import { useRef, useState } from "react";
 import { Button, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import * as ImagePicker from "expo-image-picker";
 
 export default function Picture() {
   const [facing, setFacing] = useState<CameraType>("back");
@@ -17,6 +18,7 @@ export default function Picture() {
   const generateUploadUrl = useMutation(api.messages.generateUploadUrl);
   const sendImage = useMutation(api.messages.sendImage);
   const listImages = useQuery(api.listMessages.list);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
 
   if (!permission) {
     // Camera permissions are still loading.
@@ -43,6 +45,7 @@ export default function Picture() {
     if (captured) {
       const { height, uri, width, base64 } = captured;
       const postUrl = await generateUploadUrl();
+
       console.log("posturl", postUrl);
       const result = await fetch(postUrl, {
         method: "POST",
